@@ -10,35 +10,28 @@ app = Flask(__name__, static_folder="../frontend", static_url_path="")
 CORS(app)
 
 MODEL_PATH = "model.pkl"
-VECTORIZER_PATH = "vectorizer.pkl"
+VECTOR_PATH = "vectorizer.pkl"
 DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "Data", "dataset.json")
+FEEDBACK_PATH = os.path.join(os.path.dirname(__file__), "..", "Data", "feedback.json")
+
+def load_dataset():
+    with open(DATA_PATH, 'r') as f:
+        return json.load(f)
 
 def ensure_model_trained():
-    global model, vectorizer, dataset
-    if not os.path.exists(DATA_PATH):
-        dataset = {"intents": []}
-        with open(DATA_PATH, 'w') as f:
-            json.dump(dataset, f)
-    else:
-        with open(DATA_PATH, 'r') as f:
-            dataset = json.load(f)
-
-    if not os.path.exists(MODEL_PATH) or not os.path.exists(VECTORIZER_PATH):
-        print("Model or vectorizer not found, creating new ones...")
+    global model, vectorizer
+    dataset = load_dataset()
+    if not hasattr(model, 'steps'):
+        print("Model not trained or loaded, creating new model...")
         patterns_tfidf, tags, vectorizer = preprocess_data(dataset)
         model = train_model(patterns_tfidf, tags)
         with open(MODEL_PATH, 'wb') as f:
             pickle.dump(model, f)
-        with open(VECTORIZER_PATH, 'wb') as f:
+        with open(VECTOR_PATH, 'wb') as f:
             pickle.dump(vectorizer, f)
-        print("Model and vectorizer trained and saved.")
+        print("Model trained and saved.")
     else:
-        print("Loading model and vectorizer...")
-        with open(MODEL_PATH, 'rb') as f:
-            model = pickle.load(f)
-        with open(VECTORIZER_PATH, 'rb') as f:
-            vectorizer = pickle.load(f)
-        print("Model and vectorizer loaded.")
+        print("Model already trained and loaded.")
 
 @app.route('/')
 def serve_index():
@@ -49,7 +42,7 @@ def ask():
     question = request.json.get('question')
     print(f"Received question: {question}")
 
-    ensure_model_trained()  # Ensure model is trained
+    ensure_model_trained()
 
     try:
         question_tfidf = vectorizer.transform([question])
@@ -61,26 +54,45 @@ def ask():
         print(f"Error predicting response: {e}")
         return jsonify({"error": str(e)}), 500
 
-@app.route('/upload', methods=['POST'])
-def upload():
-    file = request.files['file']
-    data = json.load(file)
+@app.route('/feedback', methods=['POST'])
+def feedback():
+    data = request.json
+    answer = data.get('answer')
+    feedback = data.get('feedback')
 
-    global dataset
-    dataset['intents'].extend(data['intents'])
+    feedback_data = {"answer": answer, "feedback": feedback}
 
-    patterns_tfidf, tags, vectorizer = preprocess_data(dataset)
-    model = train_model(patterns_tfidf, tags)
+    if os.path.exists(FEEDBACK_PATH):
+        try:
+            with open(FEEDBACK_PATH, 'r') as f:
+                feedback_list = json.load(f)
+        except (json.JSONDecodeError, FileNotFoundError):
+            feedback_list = []
+    else:
+        feedback_list = []
 
-    with open(MODEL_PATH, 'wb') as f:
-        pickle.dump(model, f)
-    with open(VECTORIZER_PATH, 'wb') as f:
-        pickle.dump(vectorizer, f)
-    with open(DATA_PATH, 'w') as f:
-        json.dump(dataset, f)
+    feedback_list.append(feedback_data)
 
-    return jsonify({"status": "Model updated successfully"})
+    with open(FEEDBACK_PATH, 'w') as f:
+        json.dump(feedback_list, f)
+
+    return jsonify({"status": "Feedback received"})
 
 if __name__ == '__main__':
+    if os.path.exists(DATA_PATH):
+        with open(DATA_PATH, 'r') as f:
+            dataset = json.load(f)
+    else:
+        dataset = {"intents": []}
+
+    if os.path.exists(MODEL_PATH) and os.path.exists(VECTOR_PATH):
+        with open(MODEL_PATH, 'rb') as f:
+            model = pickle.load(f)
+        with open(VECTOR_PATH, 'rb') as vf:
+            vectorizer = pickle.load(vf)
+    else:
+        model = create_model()
+        vectorizer = None
+
     ensure_model_trained()
     app.run(debug=True)

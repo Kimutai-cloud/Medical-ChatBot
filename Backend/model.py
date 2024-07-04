@@ -1,8 +1,8 @@
 from sklearn.pipeline import make_pipeline
-from sklearn.svm import LinearSVC
+from sklearn.linear_model import LogisticRegression
 
 def create_model():
-    return make_pipeline(LinearSVC())
+    return make_pipeline(LogisticRegression(max_iter=200))
 
 def train_model(patterns_tfidf, tags):
     model = create_model()
