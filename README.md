@@ -29,5 +29,4 @@ Open your browser and navigate to http://127.0.0.1:5000.
 - Provide feedback by clicking the thumbs up (👍) or thumbs down (👎) button.
 
 ## ScreenShots 
-```markdown
 ![Chatbot Screenshot](Miscellaneous/image.png)
