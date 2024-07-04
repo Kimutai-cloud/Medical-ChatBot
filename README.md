@@ -27,3 +27,7 @@ Open your browser and navigate to http://127.0.0.1:5000.
 - Type your question in the input box and click "Send".
 - The chatbot will respond with an answer.
 - Provide feedback by clicking the thumbs up (👍) or thumbs down (👎) button.
+
+## ScreenShots 
+```markdown
+![Chatbot Screenshot](Miscellaneous/image.png)
