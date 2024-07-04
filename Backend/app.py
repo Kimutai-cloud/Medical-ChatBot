@@ -2,12 +2,10 @@ import json
 import os
 import pickle
 from flask import Flask, request, jsonify, send_from_directory
-from flask_cors import CORS
 from model import create_model, train_model
 from preprocess import preprocess_data
 
 app = Flask(__name__, static_folder="../frontend", static_url_path="")
-CORS(app)
 
 MODEL_PATH = "model.pkl"
 VECTOR_PATH = "vectorizer.pkl"
