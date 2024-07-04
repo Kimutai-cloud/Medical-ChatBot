@@ -10,15 +10,16 @@ async function sendQuestion() {
     const data = await response.json();
     const chatBox = document.getElementById('chat-box');
     const responseId = `response-${Date.now()}`;
-    chatBox.innerHTML += `<p>User: ${userInput}</p>`;
+    chatBox.innerHTML += `<p class="user">User: ${userInput}</p>`;
     chatBox.innerHTML += `
-        <p>
-            Bot: ${data.answer} 
+        <p class="bot">
+            Bot: ${data.answer}
             <br>
-            <button onclick="sendFeedback('${responseId}', 'up')">👍</button> 
+            <button onclick="sendFeedback('${responseId}', 'up')">👍</button>
             <button onclick="sendFeedback('${responseId}', 'down')">👎</button>
         </p>`;
     chatBox.innerHTML += `<p id="${responseId}" style="display: none;">${data.answer}</p>`;
+    chatBox.scrollTop = chatBox.scrollHeight;  // Scroll to the bottom
 }
 
 async function sendFeedback(responseId, feedback) {
@@ -36,8 +37,9 @@ async function sendFeedback(responseId, feedback) {
     const chatBox = document.getElementById('chat-box');
 
     if (data.status === "Feedback received") {
-        chatBox.innerHTML += `<p>Feedback received: ${feedback === 'up' ? '👍' : '👎'}</p>`;
+        chatBox.innerHTML += `<p class="bot">Feedback received: ${feedback === 'up' ? '👍' : '👎'}</p>`;
     } else {
-        chatBox.innerHTML += `<p>Failed to submit feedback.</p>`;
+        chatBox.innerHTML += `<p class="bot">Failed to submit feedback.</p>`;
     }
+    chatBox.scrollTop = chatBox.scrollHeight;  // Scroll to the bottom
 }
